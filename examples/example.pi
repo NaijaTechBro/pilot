@@ -1,4 +1,0 @@
-number1 = 141;
-141 = number;
-_number_2 = 27;
-return (number1);
