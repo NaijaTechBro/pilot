@@ -1,6 +1,7 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
+#include <vector>
 #include "headers/lexer.hpp"
 
 
@@ -29,7 +30,8 @@ int main(int argc, char ** argv) {
 
     std::cout << "This is the source code " << std::endl << sourceCode;
 
-    Lexer lexer (sourceCode);
+    Lexer lexer(sourceCode);
+    std::vector <Token *> tokens = lexer.tokenize();
 
     std::cout << "this is the end of the program " << std::endl;
 
