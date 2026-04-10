@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <sstream>
+#include <iostream>
 
 /**
  * Token Types
@@ -28,6 +29,20 @@ struct Token {
     std::string VALUE;
 };
 
+std::string typeToString(enum type TYPE) {
+    switch (TYPE) {
+        case TOKEN_ID : return "TOKEN_ID";
+        case TOKEN_INT : return "TOKEN_INT";
+        case TOKEN_EQUALS : return "TOKEN_EQUALS";
+        case TOKEN_SEMICOLON : return "TOKEN_SEMICOLON";
+        case TOKEN_LEFT_PAREN : return "TOKEN_LEFT_PAREN";
+        case TOKEN_RIGHT_PAREN : return "TOKEN_RIGHT_PAREN";
+        default: return "UNKNOWN_TOKEN";
+    }
+}
+
+
+
 class Lexer
 {
     public:
@@ -41,6 +56,8 @@ class Lexer
         source = sourceCode;
         cursor = 0;
         size = sourceCode.length();
+        lineNumber = 1;
+        characterNumber = 1;
 
         // Safety: Prevent crashing if the user provides an empty file.
         if (size > 0) {
@@ -59,19 +76,25 @@ class Lexer
         if (cursor < size) {
             const char temp = current;
             cursor++;
-            // Update 'current' for the new position, or set to null if we hit the end.
+            characterNumber++; // Keep track of the column for every single character
             current = (cursor < size ) ? source[cursor] : '\0';
             return temp;
         }
         return '\0';
     }
-
     /**
      * Skip Whitespace: Drains non-functional characters (spaces, tabs, newlines).
      * These characters help humans read code but are ignored by the compiler logic.
      */
     void checkAndSkip() {
         while (current == ' ' || current == '\t' || current == '\n' || current == '\r') {
+            if (current == '\n') {
+                lineNumber++;
+                characterNumber = 0;
+            }
+            else {
+                characterNumber++;
+            }
             advance();
         }
     }
@@ -86,8 +109,29 @@ class Lexer
         while (isalnum(current) || current == '_') {
             buffer << advance();
         }
+        Token * newToken = new Token();
+
+        newToken->TYPE = TOKEN_ID;
+        newToken->VALUE = buffer.str();
         // Note: 'new' creates the token on the HEAP so it persists after this function ends.
-        return new Token{TOKEN_ID, buffer.str()};
+        return newToken;
+    }
+    Token * tokenizeSPECIAL(enum type TYPE) {
+        Token * newToken = new Token();
+        newToken->TYPE = TYPE;
+        newToken->VALUE = std::string(1, advance());
+        return newToken;
+    }
+    Token * tokenizeINT() {
+        std::stringstream buffer;
+        while (isdigit(current)) {
+            buffer << advance();
+        }
+        Token * newToken = new Token();
+        newToken->TYPE = TOKEN_INT;
+        newToken->VALUE = buffer.str();
+
+        return newToken;
     }
 
     /**
@@ -102,9 +146,47 @@ class Lexer
             checkAndSkip();
 
             // Logic Branch: If it starts with a letter, it must be an Identifier.
-            if (isalpha(current) || current == '_') {
+            if (isalpha(current) || current == '_') // this is the logic for ids
+                {
                 tokens.push_back(tokenizeID());
                 continue;
+            }
+
+            if (isdigit (current)) // this is the logic for integer literals
+            {
+                tokens.push_back(tokenizeINT());
+                continue;
+            }
+
+            switch(current) {
+                case ';':
+                {
+                tokens.push_back(tokenizeSPECIAL(TOKEN_SEMICOLON));
+                continue;
+                }
+
+                case '=':
+                {
+                    tokens.push_back(tokenizeSPECIAL(TOKEN_EQUALS));
+                    continue;
+                }
+
+                case '(':
+                {
+                    tokens.push_back(tokenizeSPECIAL(TOKEN_LEFT_PAREN));
+                    continue;
+                }
+
+                case ')':
+                {
+                    tokens.push_back(tokenizeSPECIAL(TOKEN_RIGHT_PAREN));
+                    continue;
+                }
+                default: {
+                    std::cerr << "[!] LEXER ERROR: Unexpected character '" << current << "'" << std::endl;
+                    std::cerr << "At line " << lineNumber << ", column " << characterNumber << std::endl;
+                    exit(1);
+                }
             }
 
             // Fallback: If we don't recognize a character, we must skip or handle it
@@ -130,6 +212,10 @@ class Lexer
     int cursor;         // Current reading position (index)
     int size;           // Total length of the source code
     char current;       // The character currently being inspected
+    int lineNumber;     // The line number in which an error occurred
+    int characterNumber;
+
+
 };
 
 #endif

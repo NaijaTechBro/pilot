@@ -32,7 +32,13 @@ int main(int argc, char ** argv) {
 
     Lexer lexer(sourceCode);
     std::vector <Token *> tokens = lexer.tokenize();
+    int counter = 0;
+    std::cout << "[*] TOKENIZED SUCCESSFULLY" << std::endl;
 
+    for (Token * temp : tokens) {
+        counter++;
+        std::cout << counter <<  ") " << temp->VALUE << " " << typeToString(temp->TYPE)<< std::endl;
+    }
     std::cout << "this is the end of the program " << std::endl;
 
     return 0;
