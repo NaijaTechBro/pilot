@@ -28,12 +28,17 @@ int main(int argc, char ** argv) {
 
     char temp;
 
-    std::cout << "This is the source code " << std::endl << sourceCode;
+    std::cout << "This is the source code : " << std::endl << std::endl << sourceCode << std::endl << std::endl;
 
     Lexer lexer(sourceCode);
     std::vector <Token *> tokens = lexer.tokenize();
     int counter = 0;
     std::cout << "[*] TOKENIZED SUCCESSFULLY" << std::endl;
+    if (tokens.back()-> TYPE != TOKEN_EOF) {
+        Token * EOFNode = new Token();
+        EOFNode->TYPE = TOKEN_EOF;
+        tokens.push_back(EOFNode);
+    }
 
     for (Token * temp : tokens) {
         counter++;

@@ -4,6 +4,7 @@
 #include <vector>
 #include <sstream>
 #include <iostream>
+#include <algorithm>
 
 /**
  * Token Types
@@ -17,6 +18,8 @@ enum type {
     TOKEN_SEMICOLON, // The ';' character
     TOKEN_LEFT_PAREN,  // '('
     TOKEN_RIGHT_PAREN, // ')'
+    TOKEN_KEYWORD,
+    TOKEN_EOF,
 };
 
 /**
@@ -37,6 +40,8 @@ std::string typeToString(enum type TYPE) {
         case TOKEN_SEMICOLON : return "TOKEN_SEMICOLON";
         case TOKEN_LEFT_PAREN : return "TOKEN_LEFT_PAREN";
         case TOKEN_RIGHT_PAREN : return "TOKEN_RIGHT_PAREN";
+        case TOKEN_KEYWORD : return "TOKEN_KEYWORD";
+        case TOKEN_EOF : return "TOKEN_EOF";
         default: return "UNKNOWN_TOKEN";
     }
 }
@@ -103,7 +108,8 @@ class Lexer
      * Tokenize Identifier: Gathers characters to form a word or keyword.
      * Triggered when the Lexer sees a letter or an underscore.
      */
-    Token * tokenizeID() {
+    std::vector <std::string> keywords = {"return", "print"};
+    Token * tokenizeID_KEYWORD() {
         std::stringstream buffer;
         // As long as characters are letters, numbers, or underscores, they belong to the ID.
         while (isalnum(current) || current == '_') {
@@ -111,7 +117,7 @@ class Lexer
         }
         Token * newToken = new Token();
 
-        newToken->TYPE = TOKEN_ID;
+        newToken->TYPE = (std::find(keywords.begin(), keywords.end(), buffer.str()) != keywords.end()) ? TOKEN_KEYWORD : TOKEN_ID;
         newToken->VALUE = buffer.str();
         // Note: 'new' creates the token on the HEAP so it persists after this function ends.
         return newToken;
@@ -148,7 +154,7 @@ class Lexer
             // Logic Branch: If it starts with a letter, it must be an Identifier.
             if (isalpha(current) || current == '_') // this is the logic for ids
                 {
-                tokens.push_back(tokenizeID());
+                tokens.push_back(tokenizeID_KEYWORD());
                 continue;
             }
 
@@ -182,6 +188,13 @@ class Lexer
                     tokens.push_back(tokenizeSPECIAL(TOKEN_RIGHT_PAREN));
                     continue;
                 }
+
+                case 0:
+                {
+                    tokens.push_back(tokenizeSPECIAL(TOKEN_EOF));
+                    continue;
+                }
+
                 default: {
                     std::cerr << "[!] LEXER ERROR: Unexpected character '" << current << "'" << std::endl;
                     std::cerr << "At line " << lineNumber << ", column " << characterNumber << std::endl;
