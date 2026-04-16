@@ -4,4 +4,5 @@ project(pilot)
 set(CMAKE_CXX_STANDARD 20)
 
 add_executable(pilot pilot.cpp
-        headers/lexer.hpp)
+        headers/lexer.hpp
+        headers/parser.hpp)
