@@ -29,7 +29,10 @@ public:
         current = parserTokens.at(index);
     }
 
-    // Safety Fix: Added bounds checking and better error reporting
+    // Safety Fix:
+    //
+    //
+    // Added bounds checking and better error reporting
     void proceed(enum type TYPE) {
         if (current->TYPE != TYPE) {
             std::cout << "[!] SYNTAX ERROR: Expected " << typeToString(TYPE)
