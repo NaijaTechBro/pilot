@@ -19,6 +19,8 @@ enum type {
     TOKEN_LEFT_PAREN,  // '('
     TOKEN_RIGHT_PAREN, // ')'
     TOKEN_KEYWORD,
+    TOKEN_QUOTES,
+    TOKEN_STRING,
     TOKEN_EOF,
 };
 
@@ -41,6 +43,8 @@ std::string typeToString(enum type TYPE) {
         case TOKEN_LEFT_PAREN : return "TOKEN_LEFT_PAREN";
         case TOKEN_RIGHT_PAREN : return "TOKEN_RIGHT_PAREN";
         case TOKEN_KEYWORD : return "TOKEN_KEYWORD";
+        case TOKEN_QUOTES : return "TOKEN_QUOTES";
+        case TOKEN_STRING : return "TOKEN_STRING";
         case TOKEN_EOF : return "TOKEN_EOF";
         default: return "UNKNOWN_TOKEN";
     }
@@ -122,6 +126,27 @@ class Lexer
         // Note: 'new' creates the token on the HEAP so it persists after this function ends.
         return newToken;
     }
+    Token * tokenizeSTRING() {
+        std::stringstream buffer;
+
+        // Read characters until we hit a quote or the end of the file
+        while (current != '"' && current != '\0') {
+            buffer << advance();
+        }
+
+        if (current == '\0') {
+            std::cerr << "[!] LEXER ERROR: Unterminated string literal" << std::endl;
+            exit(1);
+        }
+
+        // CRITICAL: Advance past the closing quote so the Lexer doesn't see it again
+        advance();
+
+        Token * newToken = new Token();
+        newToken->TYPE = TOKEN_STRING;
+        newToken->VALUE = buffer.str();
+        return newToken;
+    }
     Token * tokenizeSPECIAL(enum type TYPE) {
         Token * newToken = new Token();
         newToken->TYPE = TYPE;
@@ -177,6 +202,12 @@ class Lexer
                     continue;
                 }
 
+                case '"':
+                {
+                    advance();
+                    tokens.push_back(tokenizeSTRING());
+                    continue;
+                }
                 case '(':
                 {
                     tokens.push_back(tokenizeSPECIAL(TOKEN_LEFT_PAREN));

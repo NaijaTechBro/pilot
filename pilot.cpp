@@ -31,7 +31,7 @@ int main(int argc, char ** argv) {
     char temp;
 
     std::cout << "This is the source code : " << std::endl << std::endl << sourceCode << std::endl;
-
+    sourceCode.append("\0");
     Lexer lexer(sourceCode);
     std::vector <Token *> tokens = lexer.tokenize();
     int counter = 0;
@@ -44,7 +44,7 @@ int main(int argc, char ** argv) {
 
     for (Token * temp : tokens) {
         counter++;
-        //std::cout << counter <<  ") " << temp->VALUE << " " << typeToString(temp->TYPE)<< std::endl;
+        std::cout << counter <<  ") " << temp->VALUE << " " << typeToString(temp->TYPE)<< std::endl;
     }
 
     Parser parser(tokens);

@@ -11,6 +11,7 @@ enum NODE_TYPE {
     NODE_RETURN,
     NODE_PRINT,
     NODE_INT,
+    NODE_STRING,
 };
 
 struct AST_NODE {
@@ -29,10 +30,6 @@ public:
         current = parserTokens.at(index);
     }
 
-    // Safety Fix:
-    //
-    //
-    // Added bounds checking and better error reporting
     void proceed(enum type TYPE) {
         if (current->TYPE != TYPE) {
             std::cout << "[!] SYNTAX ERROR: Expected " << typeToString(TYPE)
@@ -79,12 +76,28 @@ public:
         return newNode;
     }
 
+    AST_NODE * parseSTRING() {
+        if (current->TYPE != TOKEN_STRING) {
+            std::cout << "[!] Parser Error : the print statement does not have a string linked to it";
+            exit(1);
+        }
+        AST_NODE * newNode = new AST_NODE();
+        newNode->TYPE = NODE_STRING;
+        newNode->VALUE = &current->VALUE;
+        proceed(TOKEN_STRING);
+        return newNode;
+    }
+
     AST_NODE * parsePRINT() {
-        proceed(TOKEN_KEYWORD); // consumes "print"
+        // We already consumed TOKEN_KEYWORD in parseKEYWORD
+        proceed(TOKEN_LEFT_PAREN);
+
         AST_NODE * newNode = new AST_NODE();
         newNode->TYPE = NODE_PRINT;
-        proceed(TOKEN_LEFT_PAREN);
-        newNode->CHILD = parseINT();
+
+        // This will consume the TOKEN_STRING
+        newNode->CHILD = parseSTRING();
+
         proceed(TOKEN_RIGHT_PAREN);
         return newNode;
     }
@@ -93,6 +106,7 @@ public:
         if (current->VALUE == "return") {
             return parseRETURN();
         } else if (current->VALUE == "print") {
+            proceed(TOKEN_KEYWORD);
             return parsePRINT();
         } else {
             std::cout << "[!] SYNTAX ERROR: Undefined keyword " << current->VALUE << std::endl;
